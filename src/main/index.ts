@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
-import { onGetFileTree, onReadFile, onWriteFile } from './file';
+import { onGetFileTree, onGetNewDirectoryFileTree, onReadFile, onWriteFile } from './file';
 import { configManager } from './config';
 
 function createWindow(): void {
@@ -55,6 +55,7 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'));
 
   ipcMain.handle('getFileTree', onGetFileTree);
+  ipcMain.handle('getNewDirectoryFileTree', onGetNewDirectoryFileTree);
   ipcMain.handle('readFile', onReadFile);
   ipcMain.handle('writeFile', onWriteFile);
 

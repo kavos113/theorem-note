@@ -9,6 +9,7 @@ interface FileItem {
 
 interface ElectronFileAPI {
   getFileTree: (rootPath: string) => Promise<FileItem[]>;
+  getNewDirectoryFileTree: () => Promise<FileItem[]>;
   readFile: (filePath: string) => Promise<string>;
   writeFile: (filePath: string, content: string) => Promise<void>;
   getLastOpenedDirectory: () => Promise<string | undefined>;

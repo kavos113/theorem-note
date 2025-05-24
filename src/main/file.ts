@@ -10,6 +10,22 @@ interface FileItem {
   children?: FileItem[];
 }
 
+export const onGetNewDirectoryFileTree = async (): Promise<FileItem[]> => {
+  try {
+    // ダイアログを開いて新しいディレクトリを選択
+    const path = await showOpenDirectoryDialog();
+    if (!path) {
+      return []; // ユーザーがキャンセルした場合
+    }
+
+    // 選択されたディレクトリのツリーを取得
+    return await getDirectoryTree(path);
+  } catch (err) {
+    console.error('Error getting new directory file tree:', err);
+    throw new Error('新しいディレクトリのファイルツリーの取得中にエラーが発生しました');
+  }
+};
+
 export const onGetFileTree = async (_event, rootPath: string): Promise<FileItem[]> => {
   try {
     // ルートパスが指定されていない場合は、前回のディレクトリまたはダイアログからフォルダを選択
@@ -30,12 +46,11 @@ export const onGetFileTree = async (_event, rootPath: string): Promise<FileItem[
 
       // 前回のディレクトリが存在しない、または取得できない場合はダイアログを開く
       if (!rootPath) {
-        const { filePaths } = await dialog.showOpenDialog({
-          properties: ['openDirectory']
-        });
-        rootPath = filePaths[0];
-        if (!rootPath) {
+        const path = await showOpenDirectoryDialog();
+        if (!path) {
           return []; // ユーザーがキャンセルした場合
+        } else {
+          rootPath = path;
         }
       }
     }
@@ -114,4 +129,11 @@ async function getDirectoryTree(dirPath: string): Promise<FileItem[]> {
     console.error('Error reading directory:', err);
     return [];
   }
+}
+
+async function showOpenDirectoryDialog(): Promise<string | undefined> {
+  const { filePaths } = await dialog.showOpenDialog({
+    properties: ['openDirectory']
+  });
+  return filePaths[0];
 }

@@ -4,22 +4,14 @@ import { electronAPI as toolkitElectronAPI } from '@electron-toolkit/preload';
 // Custom APIs for renderer
 const api = {};
 
-// ファイルシステム関連のAPIを追加
 const electronAPI = {
-  // ファイルツリーを取得
   getFileTree: (rootPath: string) => ipcRenderer.invoke('getFileTree', rootPath),
-
-  // ファイルの内容を読み込む
+  getNewDirectoryFileTree: () => ipcRenderer.invoke('getNewDirectoryFileTree'),
   readFile: (filePath: string) => ipcRenderer.invoke('readFile', filePath),
-
-  // ファイルに内容を書き込む
   writeFile: (filePath: string, content: string) =>
     ipcRenderer.invoke('writeFile', filePath, content),
-
-  // 前回開いたディレクトリを取得
   getLastOpenedDirectory: () => ipcRenderer.invoke('getLastOpenedDirectory'),
 
-  // 一般的なIPCイベント
   on: (channel: string, callback: (...args: unknown[]) => void) => {
     const subscription = (_event: unknown, ...args: unknown[]): void => callback(...args);
     ipcRenderer.on(channel, subscription);

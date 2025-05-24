@@ -1,26 +1,125 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
 import MarkdownEditor from './components/MarkdownEditor.vue';
 
-// 現在選択されているファイルとその内容
-const selectedFilePath = ref<string | undefined>(undefined);
-const fileContent = ref<string>('');
+// タブで開いているファイルの型定義
+interface OpenFile {
+  path: string;
+  content: string;
+  isModified: boolean;
+  displayName: string;
+}
+
+// タブ管理
+const openFiles = ref<OpenFile[]>([]);
+const activeTabIndex = ref<number>(-1);
 const rootPath = ref<string>('');
 const isLoading = ref(false);
 const showPreview = ref<boolean>(true);
+
+// 現在アクティブなファイルの計算プロパティ
+const activeFile = computed((): OpenFile | undefined => {
+  if (activeTabIndex.value >= 0 && activeTabIndex.value < openFiles.value.length) {
+    return openFiles.value[activeTabIndex.value];
+  }
+  return undefined;
+});
+
+// 現在選択されているファイルパス（後方互換性のため）
+const selectedFilePath = computed(() => activeFile.value?.path);
 
 // プレビューの表示/非表示を切り替える
 const togglePreview = (): void => {
   showPreview.value = !showPreview.value;
 };
 
+// ファイル名からタブ表示用の名前を取得
+const getDisplayName = (filePath: string): string => {
+  return filePath.split('\\').pop() || filePath.split('/').pop() || filePath;
+};
+
+// 新しいタブでファイルを開く
+const openFileInTab = async (filePath: string): Promise<void> => {
+  try {
+    isLoading.value = true;
+
+    // 既に開いているファイルかチェック
+    const existingIndex = openFiles.value.findIndex((file) => file.path === filePath);
+    if (existingIndex !== -1) {
+      // 既に開いている場合はそのタブをアクティブにする
+      activeTabIndex.value = existingIndex;
+      return;
+    }
+
+    // ファイルの内容を読み込む
+    const content = await window.electronAPI.readFile(filePath);
+
+    // 新しいタブを作成
+    const newFile: OpenFile = {
+      path: filePath,
+      content,
+      isModified: false,
+      displayName: getDisplayName(filePath)
+    };
+
+    openFiles.value.push(newFile);
+    activeTabIndex.value = openFiles.value.length - 1;
+  } catch (err) {
+    console.error('ファイル読み込みエラー:', err);
+    // エラーの場合でもタブを作成（エラーメッセージを表示）
+    const newFile: OpenFile = {
+      path: filePath,
+      content: '# エラー\nファイルを読み込めませんでした',
+      isModified: false,
+      displayName: getDisplayName(filePath)
+    };
+    openFiles.value.push(newFile);
+    activeTabIndex.value = openFiles.value.length - 1;
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// タブを閉じる
+const closeTab = (index: number): void => {
+  if (index < 0 || index >= openFiles.value.length) return;
+
+  openFiles.value.splice(index, 1);
+
+  // アクティブタブのインデックスを調整
+  if (openFiles.value.length === 0) {
+    activeTabIndex.value = -1;
+  } else if (index <= activeTabIndex.value) {
+    if (activeTabIndex.value > 0) {
+      activeTabIndex.value--;
+    } else {
+      activeTabIndex.value = 0;
+    }
+  }
+};
+
+// タブを切り替える
+const switchToTab = (index: number): void => {
+  if (index >= 0 && index < openFiles.value.length) {
+    activeTabIndex.value = index;
+  }
+};
+
 // ファイルを保存する
 const saveFile = async (): Promise<void> => {
-  if (!selectedFilePath.value) return;
+  const active = activeFile.value;
+  if (!active) return;
 
   try {
-    await window.electronAPI.writeFile(selectedFilePath.value, fileContent.value);
+    await window.electronAPI.writeFile(active.path, active.content);
+
+    // 変更フラグをリセット
+    const fileIndex = openFiles.value.findIndex((f) => f.path === active.path);
+    if (fileIndex !== -1) {
+      openFiles.value[fileIndex].isModified = false;
+    }
+
     console.log('ファイルが保存されました');
   } catch (err) {
     console.error('ファイル保存エラー:', err);
@@ -29,31 +128,27 @@ const saveFile = async (): Promise<void> => {
 
 // MarkdownEditorからのコンテンツ更新を処理
 const handleContentUpdate = (newContent: string): void => {
-  fileContent.value = newContent;
+  const active = activeFile.value;
+  if (!active) return;
+
+  // アクティブファイルのコンテンツを更新
+  const fileIndex = openFiles.value.findIndex((f) => f.path === active.path);
+  if (fileIndex !== -1) {
+    openFiles.value[fileIndex].content = newContent;
+    openFiles.value[fileIndex].isModified = true;
+  }
 };
 
-// ファイルが選択されたときのハンドラー
+// ファイルが選択されたときのハンドラー（FileExplorerから）
 const handleFileSelect = async (filePath: string): Promise<void> => {
-  try {
-    isLoading.value = true;
-    selectedFilePath.value = filePath;
-
-    // ファイルの内容を読み込む
-    const content = await window.electronAPI.readFile(filePath);
-    fileContent.value = content;
-  } catch (err) {
-    console.error('ファイル読み込みエラー:', err);
-    fileContent.value = '# エラー\nファイルを読み込めませんでした';
-  } finally {
-    isLoading.value = false;
-  }
+  await openFileInTab(filePath);
 };
 
 // フォルダ選択ダイアログを開く
 const openFolder = async (): Promise<void> => {
   try {
     // getFileTreeに空文字列を渡すとダイアログが開く
-    const fileTree = await window.electronAPI.getFileTree('');
+    const fileTree = await window.electronAPI.getNewDirectoryFileTree();
     if (fileTree && fileTree.length > 0) {
       rootPath.value = fileTree[0].path.split('\\').slice(0, -1).join('\\');
     }
@@ -122,18 +217,33 @@ onMounted(async () => {
 
       <!-- メインコンテンツ領域 -->
       <div class="main-content">
+        <!-- タブバー -->
+        <div v-if="openFiles.length > 0" class="tab-bar">
+          <div
+            v-for="(file, index) in openFiles"
+            :key="file.path"
+            class="tab"
+            :class="{ active: index === activeTabIndex }"
+            @click="switchToTab(index)"
+          >
+            <span class="tab-name">{{ file.displayName }}</span>
+            <span v-if="file.isModified" class="modified-indicator">●</span>
+            <button class="tab-close" @click.stop="closeTab(index)">×</button>
+          </div>
+        </div>
+
         <div v-if="isLoading" class="loading">読み込み中...</div>
-        <div v-else-if="!selectedFilePath" class="welcome-screen">
+        <div v-else-if="openFiles.length === 0" class="welcome-screen">
           <h1>Theorem Note</h1>
           <p>リンク機能を重視したマークダウンエディターへようこそ</p>
           <p>
             左側のエクスプローラーからファイルを選択するか、「フォルダを開く」ボタンを押してプロジェクトフォルダを選択してください。
           </p>
         </div>
-        <div v-else class="editor-container">
+        <div v-else-if="activeFile" class="editor-container">
           <MarkdownEditor
-            :selected-file-path="selectedFilePath"
-            :file-content="fileContent"
+            :selected-file-path="activeFile.path"
+            :file-content="activeFile.content"
             :show-preview="showPreview"
             @update:file-content="handleContentUpdate"
             @save="saveFile"

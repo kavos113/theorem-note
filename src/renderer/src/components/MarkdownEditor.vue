@@ -158,6 +158,7 @@ onUnmounted(() => {
 /* マークダウンプレビューのスタイリング */
 .markdown-preview :deep(h1) {
   font-size: 2em;
+  font-weight: bold;
   margin: 0.67em 0;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.3em;
@@ -165,6 +166,7 @@ onUnmounted(() => {
 
 .markdown-preview :deep(h2) {
   font-size: 1.5em;
+  font-weight: bold;
   margin: 0.83em 0;
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.3em;
@@ -172,11 +174,13 @@ onUnmounted(() => {
 
 .markdown-preview :deep(h3) {
   font-size: 1.17em;
+  font-weight: bold;
   margin: 1em 0;
 }
 
 .markdown-preview :deep(h4) {
   font-size: 1em;
+  font-weight: bold;
   margin: 1.33em 0;
 }
 
@@ -206,6 +210,7 @@ onUnmounted(() => {
 .markdown-preview :deep(ol) {
   margin: 1em 0;
   padding-left: 2em;
+  list-style: disc;
 }
 
 .markdown-preview :deep(code) {
