@@ -281,7 +281,14 @@ onUnmounted(() => {
 .markdown-preview :deep(ol) {
   margin: 1em 0;
   padding-left: 2em;
-  list-style: disc;
+}
+
+.markdown-preview :deep(ul) {
+  list-style-type: disc;
+}
+
+.markdown-preview :deep(ol) {
+  list-style-type: decimal;
 }
 
 .markdown-preview :deep(code) {
@@ -306,6 +313,23 @@ onUnmounted(() => {
   border-radius: 0;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 0.9em;
+}
+
+.markdown-preview :deep(table) {
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-preview :deep(th),
+.markdown-preview :deep(td) {
+  border: 1px solid var(--border-color);
+  padding: 0.5em;
+  text-align: left;
+}
+
+.markdown-preview :deep(th) {
+  background-color: var(--sidebar-header-bg);
+  font-weight: bold;
 }
 
 .editor-content-split.preview-hidden .editor-pane {
