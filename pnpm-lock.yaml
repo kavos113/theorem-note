@@ -20,6 +20,9 @@ importers:
       electron-updater:
         specifier: ^6.3.9
         version: 6.6.2
+      marked:
+        specifier: ^15.0.12
+        version: 15.0.12
     devDependencies:
       '@electron-toolkit/eslint-config-prettier':
         specifier: 3.0.0
@@ -30,6 +33,9 @@ importers:
       '@electron-toolkit/tsconfig':
         specifier: ^1.0.1
         version: 1.0.1(@types/node@22.14.1)
+      '@types/marked':
+        specifier: ^6.0.0
+        version: 6.0.0
       '@types/node':
         specifier: ^22.14.1
         version: 22.14.1
@@ -615,6 +621,10 @@ packages:
 
   '@types/keyv@3.1.4':
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
+
+  '@types/marked@6.0.0':
+    resolution: {integrity: sha512-jmjpa4BwUsmhxcfsgUit/7A9KbrC48Q0q8KvnY107ogcjGgTFDlIL3RpihNpx2Mu1hM4mdFQjoVc4O6JoGKHsA==}
+    deprecated: This is a stub types definition. marked provides its own type definitions, so you do not need this installed.
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -1779,6 +1789,11 @@ packages:
   make-fetch-happen@10.2.1:
     resolution: {integrity: sha512-NgOPbRiaQM10DYXvN3/hhGVI2M5MtITFryzBGxHM5p4wnFxsVCbxkrBrDsk+EZ5OB4jEOT7AjDxtdF+KVEFT7w==}
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
+
+  marked@15.0.12:
+    resolution: {integrity: sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==}
+    engines: {node: '>= 18'}
+    hasBin: true
 
   matcher@3.0.0:
     resolution: {integrity: sha512-OkeDaAZ/bQCxeFAozM55PKcKU0yJMPGifLwV4Qgjitu+5MoAfSQN4lsLJeXZ1b8w0x+/Emda6MZgXS1jvsapng==}
@@ -3025,6 +3040,10 @@ snapshots:
   '@types/keyv@3.1.4':
     dependencies:
       '@types/node': 22.14.1
+
+  '@types/marked@6.0.0':
+    dependencies:
+      marked: 15.0.12
 
   '@types/ms@2.1.0': {}
 
@@ -4458,6 +4477,8 @@ snapshots:
     transitivePeerDependencies:
       - bluebird
       - supports-color
+
+  marked@15.0.12: {}
 
   matcher@3.0.0:
     dependencies:

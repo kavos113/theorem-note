@@ -24,12 +24,14 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "electron-store": "^10.0.1",
-    "electron-updater": "^6.3.9"
+    "electron-updater": "^6.3.9",
+    "marked": "^15.0.12"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.0.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/marked": "^6.0.0",
     "@types/node": "^22.14.1",
     "@vitejs/plugin-vue": "^5.2.3",
     "electron": "^35.1.5",

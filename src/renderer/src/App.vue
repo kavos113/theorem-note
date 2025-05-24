@@ -1,12 +1,36 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import FileExplorer from './components/FileExplorer.vue';
+import MarkdownEditor from './components/MarkdownEditor.vue';
 
 // 現在選択されているファイルとその内容
 const selectedFilePath = ref<string | undefined>(undefined);
 const fileContent = ref<string>('');
 const rootPath = ref<string>('');
 const isLoading = ref(false);
+const showPreview = ref<boolean>(true);
+
+// プレビューの表示/非表示を切り替える
+const togglePreview = (): void => {
+  showPreview.value = !showPreview.value;
+};
+
+// ファイルを保存する
+const saveFile = async (): Promise<void> => {
+  if (!selectedFilePath.value) return;
+
+  try {
+    await window.electronAPI.writeFile(selectedFilePath.value, fileContent.value);
+    console.log('ファイルが保存されました');
+  } catch (err) {
+    console.error('ファイル保存エラー:', err);
+  }
+};
+
+// MarkdownEditorからのコンテンツ更新を処理
+const handleContentUpdate = (newContent: string): void => {
+  fileContent.value = newContent;
+};
 
 // ファイルが選択されたときのハンドラー
 const handleFileSelect = async (filePath: string): Promise<void> => {
@@ -69,7 +93,19 @@ onMounted(async () => {
         <h1 class="app-title">Theorem Note</h1>
       </div>
       <div class="toolbar-right">
-        <!-- 将来的に他のツールボタンを追加する場所 -->
+        <button v-if="selectedFilePath" class="toolbar-button" @click="saveFile">
+          <span class="icon">💾</span>
+          保存
+        </button>
+        <button
+          v-if="selectedFilePath"
+          class="toolbar-button"
+          :class="{ active: showPreview }"
+          @click="togglePreview"
+        >
+          <span class="icon">👁️</span>
+          {{ showPreview ? 'プレビューを隠す' : 'プレビューを表示' }}
+        </button>
       </div>
     </div>
 
@@ -95,12 +131,13 @@ onMounted(async () => {
           </p>
         </div>
         <div v-else class="editor-container">
-          <div class="editor-header">
-            {{ selectedFilePath }}
-          </div>
-          <div class="editor-content">
-            <textarea v-model="fileContent" class="markdown-editor"></textarea>
-          </div>
+          <MarkdownEditor
+            :selected-file-path="selectedFilePath"
+            :file-content="fileContent"
+            :show-preview="showPreview"
+            @update:file-content="handleContentUpdate"
+            @save="saveFile"
+          />
         </div>
       </div>
     </div>
@@ -209,6 +246,14 @@ body {
   font-size: 14px;
 }
 
+.toolbar-button.active {
+  background-color: #005a9e;
+}
+
+.toolbar-button.active:hover {
+  background-color: #004578;
+}
+
 /* メインエリア */
 .main-area {
   display: flex;
@@ -255,33 +300,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-}
-
-.editor-header {
-  padding: 5px 10px;
-  font-size: 12px;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.editor-content {
-  flex: 1;
-  overflow: auto;
-}
-
-.markdown-editor {
-  width: 100%;
-  height: 100%;
-  padding: 10px;
-  color: var(--text-color);
-  background-color: var(--bg-color);
-  border: none;
-  outline: none;
-  resize: none;
-  font-family: 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.5;
 }
 
 .loading {
