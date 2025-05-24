@@ -5,29 +5,155 @@
       :key="file.path"
       class="tab"
       :class="{ active: index === activeTabIndex }"
-      @click="$emit('switch-tab', index)"
+      @click="switchToTab(index)"
     >
       <span class="tab-name">{{ file.displayName }}</span>
       <span v-if="file.isModified" class="modified-indicator">●</span>
-      <button class="tab-close" @click.stop="$emit('close-tab', index)">×</button>
+      <button class="tab-close" @click.stop="closeTab(index)">×</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { OpenFile } from '../composables/useTabManagement';
+import { ref, computed } from 'vue';
+
+// タブで開いているファイルの型定義
+export interface OpenFile {
+  path: string;
+  content: string;
+  isModified: boolean;
+  displayName: string;
+}
 
 interface Props {
-  openFiles: OpenFile[];
-  activeTabIndex: number;
+  isLoading?: boolean;
 }
 
 defineProps<Props>();
 
-defineEmits<{
-  'switch-tab': [index: number];
-  'close-tab': [index: number];
+const emit = defineEmits<{
+  'file-opened': [file: OpenFile];
+  'file-closed': [index: number];
+  'file-switched': [file: OpenFile];
+  'content-updated': [filePath: string, content: string];
 }>();
+
+// タブ管理状態
+const openFiles = ref<OpenFile[]>([]);
+const activeTabIndex = ref<number>(-1);
+
+// 現在アクティブなファイルの計算プロパティ
+const activeFile = computed((): OpenFile | undefined => {
+  if (activeTabIndex.value >= 0 && activeTabIndex.value < openFiles.value.length) {
+    return openFiles.value[activeTabIndex.value];
+  }
+  return undefined;
+});
+
+// ファイル名からタブ表示用の名前を取得
+const getDisplayName = (filePath: string): string => {
+  return filePath.split('\\').pop() || filePath.split('/').pop() || filePath;
+};
+
+// 新しいタブでファイルを開く
+const openFileInTab = async (filePath: string): Promise<void> => {
+  try {
+    // 既に開いているファイルかチェック
+    const existingIndex = openFiles.value.findIndex((file) => file.path === filePath);
+    if (existingIndex !== -1) {
+      // 既に開いている場合はそのタブをアクティブにする
+      activeTabIndex.value = existingIndex;
+      emit('file-switched', openFiles.value[existingIndex]);
+      return;
+    }
+
+    // ファイルの内容を読み込む
+    const content = await window.electronAPI.readFile(filePath);
+
+    // 新しいタブを作成
+    const newFile: OpenFile = {
+      path: filePath,
+      content,
+      isModified: false,
+      displayName: getDisplayName(filePath)
+    };
+
+    openFiles.value.push(newFile);
+    activeTabIndex.value = openFiles.value.length - 1;
+    emit('file-opened', newFile);
+  } catch (err) {
+    console.error('ファイル読み込みエラー:', err);
+    // エラーの場合でもタブを作成（エラーメッセージを表示）
+    const newFile: OpenFile = {
+      path: filePath,
+      content: '# エラー\nファイルを読み込めませんでした',
+      isModified: false,
+      displayName: getDisplayName(filePath)
+    };
+    openFiles.value.push(newFile);
+    activeTabIndex.value = openFiles.value.length - 1;
+    emit('file-opened', newFile);
+  }
+};
+
+// タブを閉じる
+const closeTab = (index: number): void => {
+  if (index < 0 || index >= openFiles.value.length) return;
+
+  openFiles.value.splice(index, 1);
+  emit('file-closed', index);
+
+  // アクティブタブのインデックスを調整
+  if (openFiles.value.length === 0) {
+    activeTabIndex.value = -1;
+  } else if (index <= activeTabIndex.value) {
+    if (activeTabIndex.value > 0) {
+      activeTabIndex.value--;
+    } else {
+      activeTabIndex.value = 0;
+    }
+    // 新しいアクティブファイルを通知
+    if (activeFile.value) {
+      emit('file-switched', activeFile.value);
+    }
+  }
+};
+
+// タブを切り替える
+const switchToTab = (index: number): void => {
+  if (index >= 0 && index < openFiles.value.length) {
+    activeTabIndex.value = index;
+    emit('file-switched', openFiles.value[index]);
+  }
+};
+
+// コンテンツ更新を処理
+const updateFileContent = (filePath: string, newContent: string): void => {
+  const fileIndex = openFiles.value.findIndex((f) => f.path === filePath);
+  if (fileIndex !== -1) {
+    openFiles.value[fileIndex].content = newContent;
+    openFiles.value[fileIndex].isModified = true;
+    emit('content-updated', filePath, newContent);
+  }
+};
+
+// ファイル保存後に変更フラグをリセット
+const markFileAsSaved = (filePath: string): void => {
+  const fileIndex = openFiles.value.findIndex((f) => f.path === filePath);
+  if (fileIndex !== -1) {
+    openFiles.value[fileIndex].isModified = false;
+  }
+};
+
+// 外部からの呼び出し用にメソッドを公開
+defineExpose({
+  openFileInTab,
+  updateFileContent,
+  markFileAsSaved,
+  activeFile,
+  openFiles,
+  activeTabIndex
+});
 </script>
 
 <style scoped>

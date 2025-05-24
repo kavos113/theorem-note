@@ -10,10 +10,6 @@
       <h1 class="app-title">Theorem Note</h1>
     </div>
     <div class="toolbar-right">
-      <button v-if="hasActiveFile" class="toolbar-button" @click="$emit('save-file')">
-        <span class="icon">💾</span>
-        保存
-      </button>
       <button
         v-if="hasActiveFile"
         class="toolbar-button"
@@ -37,7 +33,6 @@ defineProps<Props>();
 
 defineEmits<{
   'open-folder': [];
-  'save-file': [];
   'toggle-preview': [];
 }>();
 </script>

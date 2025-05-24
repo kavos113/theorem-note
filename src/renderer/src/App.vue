@@ -1,83 +1,53 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import HeaderToolbar from './components/HeaderToolbar.vue';
 import MainLayout from './components/MainLayout.vue';
-import { useFileManagement } from './composables/useFileManagement';
-import { useTabManagement } from './composables/useTabManagement';
 
-// ファイル管理composable
-const { rootPath, isLoading, openFolder, saveFile, loadLastDirectory } = useFileManagement();
-
-// タブ管理composable
-const {
-  openFiles,
-  activeTabIndex,
-  activeFile,
-  selectedFilePath,
-  openFileInTab,
-  closeTab,
-  switchToTab,
-  handleContentUpdate,
-  markFileAsSaved
-} = useTabManagement();
-
-// プレビュー表示状態
+// 状態管理
+const rootPath = ref<string>('');
+const isLoading = ref(false);
 const showPreview = ref<boolean>(true);
+const hasActiveFile = ref(false);
 
 // プレビューの表示/非表示を切り替える
 const togglePreview = (): void => {
   showPreview.value = !showPreview.value;
 };
 
-// ファイルが選択されたときのハンドラー（FileExplorerから）
-const handleFileSelect = async (filePath: string): Promise<void> => {
-  await openFileInTab(filePath);
+// フォルダが変更された時の処理
+const handleFolderChanged = (path: string): void => {
+  rootPath.value = path;
 };
 
-// ファイル保存処理
-const handleSaveFile = async (): Promise<void> => {
-  const active = activeFile.value;
-  if (!active) return;
-
-  try {
-    await saveFile(active.path, active.content);
-    markFileAsSaved(active.path);
-    console.log('ファイルが保存されました');
-  } catch (err) {
-    console.error('ファイル保存エラー:', err);
-  }
+// ファイルがアクティブになった時の処理
+const handleFileActiveChanged = (isActive: boolean): void => {
+  hasActiveFile.value = isActive;
 };
 
-onMounted(async () => {
-  await loadLastDirectory();
-});
+// FileExplorerのフォルダを開くボタンのハンドラー（HeaderToolbarからの呼び出し用）
+const handleOpenFolder = (): void => {
+  // FileExplorerのopenFolderメソッドを呼び出すためのイベント
+  // 実際の処理はFileExplorerで行われる
+};
 </script>
 
 <template>
   <div class="app-container">
     <!-- ヘッダーツールバー -->
     <HeaderToolbar
-      :has-active-file="!!selectedFilePath"
+      :has-active-file="hasActiveFile"
       :show-preview="showPreview"
-      @open-folder="openFolder"
-      @save-file="handleSaveFile"
+      @open-folder="handleOpenFolder"
       @toggle-preview="togglePreview"
     />
 
     <!-- メインレイアウト -->
     <MainLayout
       :root-path="rootPath"
-      :selected-file-path="selectedFilePath"
-      :open-files="openFiles"
-      :active-tab-index="activeTabIndex"
-      :active-file="activeFile"
       :is-loading="isLoading"
       :show-preview="showPreview"
-      @select-file="handleFileSelect"
-      @switch-tab="switchToTab"
-      @close-tab="closeTab"
-      @update-content="handleContentUpdate"
-      @save-file="handleSaveFile"
+      @folder-changed="handleFolderChanged"
+      @file-active-changed="handleFileActiveChanged"
     />
   </div>
 </template>

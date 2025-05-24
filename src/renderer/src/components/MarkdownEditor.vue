@@ -14,6 +14,7 @@
       </div>
       <div v-if="showPreview" class="preview-pane">
         <div class="pane-header">プレビュー</div>
+        <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="markdown-preview" v-html="htmlPreview"></div>
       </div>
     </div>
@@ -36,13 +37,30 @@ const props = defineProps<Props>();
 // Emits
 interface Emits {
   (e: 'update:fileContent', value: string): void;
-  (e: 'save'): void;
+  (e: 'file-saved'): void;
 }
 
 const emit = defineEmits<Emits>();
 
 // ローカルコンテンツの管理
 const localContent = ref(props.fileContent);
+const isSaving = ref(false);
+
+// ファイルを保存する
+const saveFile = async (): Promise<void> => {
+  if (!props.selectedFilePath || isSaving.value) return;
+
+  try {
+    isSaving.value = true;
+    await window.electronAPI.writeFile(props.selectedFilePath, localContent.value);
+    emit('file-saved');
+    console.log('ファイルが保存されました');
+  } catch (err) {
+    console.error('ファイル保存エラー:', err);
+  } finally {
+    isSaving.value = false;
+  }
+};
 
 // プロパティの変更を監視
 watch(
@@ -73,7 +91,7 @@ const htmlPreview = computed(() => {
 const handleKeyDown = (event: KeyboardEvent): void => {
   if (event.ctrlKey && event.key === 's') {
     event.preventDefault();
-    emit('save');
+    saveFile();
   }
 };
 

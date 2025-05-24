@@ -5,7 +5,8 @@
       <FileExplorer
         :root-path="rootPath"
         :selected-file="selectedFilePath"
-        @select-file="$emit('select-file', $event)"
+        @select-file="handleFileSelect"
+        @folder-changed="$emit('folder-changed', $event)"
       />
     </div>
 
@@ -13,26 +14,28 @@
     <div class="main-content">
       <!-- タブバー -->
       <TabBar
-        :open-files="openFiles"
-        :active-tab-index="activeTabIndex"
-        @switch-tab="$emit('switch-tab', $event)"
-        @close-tab="$emit('close-tab', $event)"
+        ref="tabBarRef"
+        :is-loading="isLoading"
+        @file-opened="handleFileOpened"
+        @file-closed="handleFileClosed"
+        @file-switched="handleFileSwitched"
+        @content-updated="handleContentUpdated"
       />
 
       <div v-if="isLoading" class="loading">読み込み中...</div>
-      <div v-else-if="openFiles.length === 0" class="welcome-screen">
+      <div v-else-if="!currentFile" class="welcome-screen">
         <h1>Theorem Note</h1>
         <p>
           左側のエクスプローラーからファイルを選択するか、「フォルダを開く」ボタンを押してプロジェクトフォルダを選択してください。
         </p>
       </div>
-      <div v-else-if="activeFile" class="editor-container">
+      <div v-else class="editor-container">
         <MarkdownEditor
-          :selected-file-path="activeFile.path"
-          :file-content="activeFile.content"
+          :selected-file-path="currentFile.path"
+          :file-content="currentFile.content"
           :show-preview="showPreview"
-          @update:file-content="$emit('update-content', $event)"
-          @save="$emit('save-file')"
+          @update:file-content="handleContentUpdate"
+          @file-saved="handleFileSaved"
         />
       </div>
     </div>
@@ -40,30 +43,76 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import FileExplorer from './FileExplorer.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
-import TabBar from './TabBar.vue';
-import type { OpenFile } from '../composables/useTabManagement';
+import TabBar, { type OpenFile } from './TabBar.vue';
 
 interface Props {
   rootPath: string;
-  selectedFilePath: string | undefined;
-  openFiles: OpenFile[];
-  activeTabIndex: number;
-  activeFile: OpenFile | undefined;
   isLoading: boolean;
   showPreview: boolean;
 }
 
 defineProps<Props>();
 
-defineEmits<{
-  'select-file': [filePath: string];
-  'switch-tab': [index: number];
-  'close-tab': [index: number];
-  'update-content': [content: string];
-  'save-file': [];
+const emit = defineEmits<{
+  'folder-changed': [path: string];
+  'file-active-changed': [isActive: boolean];
 }>();
+
+const tabBarRef = ref<InstanceType<typeof TabBar> | null>(null);
+const currentFile = ref<OpenFile | null>(null);
+const selectedFilePath = ref<string | undefined>(undefined);
+
+// アクティブファイルの変更を監視してイベントを発行
+watch(currentFile, (newFile) => {
+  emit('file-active-changed', !!newFile);
+});
+
+// ファイル選択時の処理
+const handleFileSelect = async (filePath: string): Promise<void> => {
+  if (tabBarRef.value) {
+    await tabBarRef.value.openFileInTab(filePath);
+  }
+};
+
+// タブバーからのイベント処理
+const handleFileOpened = (file: OpenFile): void => {
+  currentFile.value = file;
+  selectedFilePath.value = file.path;
+};
+
+const handleFileClosed = (): void => {
+  // タブが閉じられた後の現在のアクティブファイルを取得
+  if (tabBarRef.value) {
+    currentFile.value = tabBarRef.value.activeFile || null;
+    selectedFilePath.value = currentFile.value?.path;
+  }
+};
+
+const handleFileSwitched = (file: OpenFile): void => {
+  currentFile.value = file;
+  selectedFilePath.value = file.path;
+};
+
+const handleContentUpdated = (): void => {
+  // タブバーで既に処理されているので、特に何もしない
+};
+
+// エディターからのコンテンツ更新
+const handleContentUpdate = (newContent: string): void => {
+  if (currentFile.value && tabBarRef.value) {
+    tabBarRef.value.updateFileContent(currentFile.value.path, newContent);
+  }
+};
+
+// ファイル保存後の処理
+const handleFileSaved = (): void => {
+  if (currentFile.value && tabBarRef.value) {
+    tabBarRef.value.markFileAsSaved(currentFile.value.path);
+  }
+};
 </script>
 
 <style scoped>
