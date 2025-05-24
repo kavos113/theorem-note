@@ -165,7 +165,7 @@ defineExpose({
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
-  min-height: 35px;
+  height: 40px;
   white-space: nowrap;
 }
 

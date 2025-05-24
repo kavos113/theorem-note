@@ -1,26 +1,3 @@
-<template>
-  <div class="editor-container">
-    <div class="editor-header">
-      {{ selectedFilePath }}
-    </div>
-    <div class="editor-content-split" :class="{ 'preview-hidden': !showPreview }">
-      <div class="editor-pane">
-        <div class="pane-header">エディタ</div>
-        <textarea
-          v-model="localContent"
-          class="markdown-editor"
-          @input="handleContentChange"
-        ></textarea>
-      </div>
-      <div v-if="showPreview" class="preview-pane">
-        <div class="pane-header">プレビュー</div>
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <div class="markdown-preview" v-html="htmlPreview"></div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { marked } from 'marked';
@@ -45,6 +22,8 @@ const emit = defineEmits<Emits>();
 // ローカルコンテンツの管理
 const localContent = ref(props.fileContent);
 const isSaving = ref(false);
+const editorWidth = ref(50); // エディタの幅（パーセンテージ）
+const isResizing = ref(false);
 
 // ファイルを保存する
 const saveFile = async (): Promise<void> => {
@@ -95,6 +74,32 @@ const handleKeyDown = (event: KeyboardEvent): void => {
   }
 };
 
+// リサイズ機能
+const startResize = (event: MouseEvent): void => {
+  event.preventDefault();
+  isResizing.value = true;
+
+  const target = event.currentTarget as HTMLElement;
+  const container = target.parentElement as HTMLElement;
+  const containerRect = container.getBoundingClientRect();
+
+  const handleMouseMove = (e: MouseEvent): void => {
+    if (!isResizing.value) return;
+
+    const newWidth = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+    editorWidth.value = Math.min(Math.max(newWidth, 20), 80); // 20%-80%の範囲で制限
+  };
+
+  const handleMouseUp = (): void => {
+    isResizing.value = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
+};
+
 // コンポーネントのマウント時とアンマウント時の処理
 onMounted(() => {
   document.addEventListener('keydown', handleKeyDown);
@@ -105,8 +110,33 @@ onUnmounted(() => {
 });
 </script>
 
+<template>
+  <div class="markdown-editor-container">
+    <div class="editor-header">
+      {{ selectedFilePath }}
+    </div>
+    <div class="editor-content-split" :class="{ 'preview-hidden': !showPreview }">
+      <div class="editor-pane" :style="{ width: showPreview ? `${editorWidth}%` : '100%' }">
+        <div class="pane-header">エディタ</div>
+        <textarea
+          v-model="localContent"
+          class="markdown-editor"
+          @input="handleContentChange"
+        ></textarea>
+      </div>
+      <div v-if="showPreview" class="resizer" @mousedown="startResize"></div>
+      <div v-if="showPreview" class="preview-pane" :style="{ width: `${100 - editorWidth}%` }">
+        <div class="pane-header">プレビュー</div>
+        <!-- eslint-disable-next-line vue/no-v-html -->
+        <div class="markdown-preview" v-html="htmlPreview"></div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
 <style scoped>
-.editor-container {
+.markdown-editor-container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -127,16 +157,27 @@ onUnmounted(() => {
 }
 
 .editor-pane {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border-color);
+  min-width: 200px;
+}
+
+.resizer {
+  width: 4px;
+  background-color: var(--border-color);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.resizer:hover {
+  background-color: var(--accent-color);
 }
 
 .preview-pane {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 200px;
 }
 
 .pane-header {
@@ -248,6 +289,6 @@ onUnmounted(() => {
 }
 
 .editor-content-split.preview-hidden .editor-pane {
-  border-right: none;
+  width: 100% !important;
 }
 </style>

@@ -161,7 +161,7 @@ const handleFileSaved = (): void => {
 .editor-container {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% - 40px);
 }
 
 .loading {
