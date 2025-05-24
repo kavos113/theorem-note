@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import FileTreeItem from './FileTreeItem.vue';
 
 interface FileItem {
@@ -46,18 +46,37 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 
 onMounted(() => {
-  loadFileTree();
+  if (props.rootPath) {
+    loadFileTree();
+  } else {
+    loading.value = false;
+  }
 });
 
-const loadFileTree = async () => {
+// rootPathが変更された時にファイルツリーを更新
+watch(
+  () => props.rootPath,
+  (newRootPath) => {
+    if (newRootPath) {
+      loadFileTree();
+    } else {
+      fileTree.value = [];
+      loading.value = false;
+    }
+  }
+);
+
+const loadFileTree = async (): Promise<void> => {
   try {
     loading.value = true;
+    error.value = null;
     // ファイル一覧をElectronのメインプロセスから取得
     const result = await window.electronAPI.getFileTree(props.rootPath || '');
     fileTree.value = result;
-    loading.value = false;
   } catch (err) {
     error.value = err instanceof Error ? err.message : '不明なエラーが発生しました';
+    fileTree.value = [];
+  } finally {
     loading.value = false;
   }
 };

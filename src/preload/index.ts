@@ -16,6 +16,9 @@ const electronAPI = {
   writeFile: (filePath: string, content: string) =>
     ipcRenderer.invoke('writeFile', filePath, content),
 
+  // 前回開いたディレクトリを取得
+  getLastOpenedDirectory: () => ipcRenderer.invoke('getLastOpenedDirectory'),
+
   // 一般的なIPCイベント
   on: (channel: string, callback: (...args: unknown[]) => void) => {
     const subscription = (_event: unknown, ...args: unknown[]): void => callback(...args);

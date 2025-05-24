@@ -9,7 +9,7 @@ const rootPath = ref<string>('');
 const isLoading = ref(false);
 
 // ファイルが選択されたときのハンドラー
-const handleFileSelect = async (filePath: string) => {
+const handleFileSelect = async (filePath: string): Promise<void> => {
   try {
     isLoading.value = true;
     selectedFilePath.value = filePath;
@@ -26,7 +26,7 @@ const handleFileSelect = async (filePath: string) => {
 };
 
 // フォルダ選択ダイアログを開く
-const openFolder = async () => {
+const openFolder = async (): Promise<void> => {
   try {
     // getFileTreeに空文字列を渡すとダイアログが開く
     const fileTree = await window.electronAPI.getFileTree('');
@@ -38,42 +38,69 @@ const openFolder = async () => {
   }
 };
 
-onMounted(() => {
-  // 初回ロード時の自動ダイアログ表示を停止
-  // rootPathが空でもダイアログを自動で開かないようにする
+onMounted(async () => {
+  // アプリケーション開始時に前回開いたディレクトリを自動的に読み込む
+  try {
+    const lastDirectory = await window.electronAPI.getLastOpenedDirectory();
+    if (lastDirectory) {
+      const fileTree = await window.electronAPI.getFileTree(lastDirectory);
+      if (fileTree && fileTree.length > 0) {
+        rootPath.value = lastDirectory;
+      }
+    }
+  } catch (err) {
+    console.log('前回のディレクトリの読み込みに失敗:', err);
+    // エラーが発生した場合は何もしない（手動でフォルダを開く必要がある）
+  }
 });
 </script>
 
 <template>
   <div class="app-container">
-    <!-- サイドバー（ファイルエクスプローラー） -->
-    <div class="sidebar">
-      <div class="sidebar-header">
-        <button @click="openFolder" class="folder-button">フォルダを開く</button>
+    <!-- ヘッダーツールバー -->
+    <div class="header-toolbar">
+      <div class="toolbar-left">
+        <button class="toolbar-button" @click="openFolder">
+          <span class="icon">📁</span>
+          フォルダを開く
+        </button>
       </div>
-      <FileExplorer
-        :root-path="rootPath"
-        :selected-file="selectedFilePath"
-        @select-file="handleFileSelect"
-      />
+      <div class="toolbar-center">
+        <h1 class="app-title">Theorem Note</h1>
+      </div>
+      <div class="toolbar-right">
+        <!-- 将来的に他のツールボタンを追加する場所 -->
+      </div>
     </div>
 
-    <!-- メインコンテンツ領域 -->
-    <div class="main-content">
-      <div v-if="isLoading" class="loading">読み込み中...</div>
-      <div v-else-if="!selectedFilePath" class="welcome-screen">
-        <h1>Theorem Note</h1>
-        <p>リンク機能を重視したマークダウンエディターへようこそ</p>
-        <p>
-          左側のエクスプローラーからファイルを選択するか、「フォルダを開く」ボタンを押してプロジェクトフォルダを選択してください。
-        </p>
+    <!-- メインエリア -->
+    <div class="main-area">
+      <!-- サイドバー（ファイルエクスプローラー） -->
+      <div class="sidebar">
+        <FileExplorer
+          :root-path="rootPath"
+          :selected-file="selectedFilePath"
+          @select-file="handleFileSelect"
+        />
       </div>
-      <div v-else class="editor-container">
-        <div class="editor-header">
-          {{ selectedFilePath }}
+
+      <!-- メインコンテンツ領域 -->
+      <div class="main-content">
+        <div v-if="isLoading" class="loading">読み込み中...</div>
+        <div v-else-if="!selectedFilePath" class="welcome-screen">
+          <h1>Theorem Note</h1>
+          <p>リンク機能を重視したマークダウンエディターへようこそ</p>
+          <p>
+            左側のエクスプローラーからファイルを選択するか、「フォルダを開く」ボタンを押してプロジェクトフォルダを選択してください。
+          </p>
         </div>
-        <div class="editor-content">
-          <textarea v-model="fileContent" class="markdown-editor"></textarea>
+        <div v-else class="editor-container">
+          <div class="editor-header">
+            {{ selectedFilePath }}
+          </div>
+          <div class="editor-content">
+            <textarea v-model="fileContent" class="markdown-editor"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -97,6 +124,8 @@ onMounted(() => {
   --border-color: #dddddd;
   --accent-color: #0078d7;
   --hover-bg: #eaeaea;
+  --header-bg: #f0f0f0;
+  --header-border: #d1d1d1;
 }
 
 html,
@@ -105,7 +134,6 @@ body {
   height: 100%;
   color: var(--text-color);
   background-color: var(--bg-color);
-  overflow: hidden;
 }
 
 #app {
@@ -116,8 +144,75 @@ body {
 /* アプリ全体のレイアウト */
 .app-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   width: 100%;
+  overflow: hidden;
+}
+
+/* ヘッダーツールバー */
+.header-toolbar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.toolbar-button:hover {
+  background-color: #0062a3;
+}
+
+.toolbar-button .icon {
+  font-size: 14px;
+}
+
+/* メインエリア */
+.main-area {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 
@@ -130,26 +225,6 @@ body {
   background-color: var(--sidebar-bg);
   border-right: 1px solid var(--border-color);
   overflow: hidden;
-}
-
-.sidebar-header {
-  padding: 10px;
-  background-color: var(--sidebar-header-bg);
-}
-
-.folder-button {
-  width: 100%;
-  padding: 6px 12px;
-  background-color: var(--accent-color);
-  color: white;
-  border: none;
-  border-radius: 3px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.folder-button:hover {
-  background-color: #0062a3;
 }
 
 /* メインコンテンツ */

@@ -3,6 +3,7 @@ import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset';
 import { onGetFileTree, onReadFile, onWriteFile } from './file';
+import { configManager } from './config';
 
 function createWindow(): void {
   // Create the browser window.
@@ -56,6 +57,11 @@ app.whenReady().then(() => {
   ipcMain.handle('getFileTree', onGetFileTree);
   ipcMain.handle('readFile', onReadFile);
   ipcMain.handle('writeFile', onWriteFile);
+
+  // 設定関連のIPC
+  ipcMain.handle('getLastOpenedDirectory', async () => {
+    return await configManager.getLastOpenedDirectory();
+  });
 
   createWindow();
 

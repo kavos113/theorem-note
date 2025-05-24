@@ -11,6 +11,7 @@ interface ElectronFileAPI {
   getFileTree: (rootPath: string) => Promise<FileItem[]>;
   readFile: (filePath: string) => Promise<string>;
   writeFile: (filePath: string, content: string) => Promise<void>;
+  getLastOpenedDirectory: () => Promise<string | undefined>;
   on: (channel: string, callback: (...args: unknown[]) => void) => () => void;
 }
 

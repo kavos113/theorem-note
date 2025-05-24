@@ -1,7 +1,7 @@
-// ファイル項目の型定義
 import path from 'path';
 import fs from 'fs/promises';
 import { dialog } from 'electron';
+import { configManager } from './config';
 
 interface FileItem {
   name: string;
@@ -12,16 +12,36 @@ interface FileItem {
 
 export const onGetFileTree = async (_event, rootPath: string): Promise<FileItem[]> => {
   try {
-    // ルートパスが指定されていない場合は、ダイアログを開いてフォルダを選択させる
+    // ルートパスが指定されていない場合は、前回のディレクトリまたはダイアログからフォルダを選択
     if (!rootPath) {
-      const { filePaths } = await dialog.showOpenDialog({
-        properties: ['openDirectory']
-      });
-      rootPath = filePaths[0];
+      // 前回開いたディレクトリを取得
+      const lastDirectory = await configManager.getLastOpenedDirectory();
+
+      if (lastDirectory) {
+        try {
+          // 前回のディレクトリが存在するかチェック
+          await fs.access(lastDirectory);
+          rootPath = lastDirectory;
+        } catch {
+          // 前回のディレクトリが存在しない場合はダイアログを開く
+          console.log('Last opened directory not found, opening dialog');
+        }
+      }
+
+      // 前回のディレクトリが存在しない、または取得できない場合はダイアログを開く
       if (!rootPath) {
-        return []; // ユーザーがキャンセルした場合
+        const { filePaths } = await dialog.showOpenDialog({
+          properties: ['openDirectory']
+        });
+        rootPath = filePaths[0];
+        if (!rootPath) {
+          return []; // ユーザーがキャンセルした場合
+        }
       }
     }
+
+    // 選択されたディレクトリを設定に保存
+    await configManager.setLastOpenedDirectory(rootPath);
 
     return await getDirectoryTree(rootPath);
   } catch (err) {
