@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { marked } from 'marked';
+import { initializeHighlightJS, createCodeRenderer } from '../utils/highlightUtils';
+import '../assets/highlight.css';
 
 // Props
 interface Props {
@@ -24,6 +26,12 @@ const localContent = ref(props.fileContent);
 const isSaving = ref(false);
 const editorWidth = ref(50); // エディタの幅（パーセンテージ）
 const isResizing = ref(false);
+
+// markedのレンダラーを設定
+const renderer = new marked.Renderer();
+renderer.code = createCodeRenderer();
+
+marked.use({ renderer });
 
 // ファイルを保存する
 const saveFile = async (): Promise<void> => {
@@ -51,8 +59,10 @@ watch(
 );
 
 // コンテンツ変更時のハンドラー
-const handleContentChange = (): void => {
-  emit('update:fileContent', localContent.value);
+const handleContentChange = (event: Event): void => {
+  const target = event.target as HTMLTextAreaElement;
+  localContent.value = target.value;
+  emit('update:fileContent', target.value);
 };
 
 // マークダウンプレビューの計算プロパティ
@@ -102,6 +112,8 @@ const startResize = (event: MouseEvent): void => {
 
 // コンポーネントのマウント時とアンマウント時の処理
 onMounted(() => {
+  // highlight.jsを初期化
+  initializeHighlightJS();
   document.addEventListener('keydown', handleKeyDown);
 });
 
@@ -133,7 +145,6 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
 
 <style scoped>
 .markdown-editor-container {
@@ -190,17 +201,18 @@ onUnmounted(() => {
 }
 
 .markdown-editor {
-  width: 100%;
-  height: 100%;
+  flex: 1;
   padding: 12px;
-  color: var(--text-color);
-  background-color: var(--bg-color);
   border: none;
   outline: none;
-  resize: none;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.6;
+  resize: none;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .markdown-preview {
@@ -286,6 +298,14 @@ onUnmounted(() => {
   border-radius: 5px;
   overflow-x: auto;
   margin: 1em 0;
+}
+
+.markdown-preview :deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
 }
 
 .editor-content-split.preview-hidden .editor-pane {

@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^4.0.0",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.3.9",
+    "highlight.js": "^11.11.1",
     "marked": "^15.0.12"
   },
   "devDependencies": {
