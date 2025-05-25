@@ -37,7 +37,7 @@ jobs:
         run: pnpm lint
 
       - name: Run TypeScript type check
-        run: pnpm type-check
+        run: pnpm typecheck
 
       - name: Run main process tests
         run: pnpm test:main
