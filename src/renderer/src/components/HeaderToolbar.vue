@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import type { ViewMode } from '../types/viewMode';
+
 interface Props {
   hasActiveFile: boolean;
-  showPreview: boolean;
+  viewMode: ViewMode;
 }
 
 defineProps<Props>();
 
 defineEmits<{
   'open-folder': [];
-  'toggle-preview': [];
+  'change-view-mode': [mode: ViewMode];
 }>();
 </script>
 
@@ -24,15 +26,32 @@ defineEmits<{
       <h1 class="app-title">Theorem Note</h1>
     </div>
     <div class="toolbar-right">
-      <button
-        v-if="hasActiveFile"
-        class="toolbar-button"
-        :class="{ active: showPreview }"
-        @click="$emit('toggle-preview')"
-      >
-        <span class="icon">👁️</span>
-        {{ showPreview ? 'プレビューを隠す' : 'プレビューを表示' }}
-      </button>
+      <div v-if="hasActiveFile" class="view-mode-buttons">
+        <button
+          class="toolbar-button"
+          :class="{ active: viewMode === 'editor' }"
+          @click="$emit('change-view-mode', 'editor')"
+        >
+          <span class="icon">📝</span>
+          エディタのみ
+        </button>
+        <button
+          class="toolbar-button"
+          :class="{ active: viewMode === 'split' }"
+          @click="$emit('change-view-mode', 'split')"
+        >
+          <span class="icon">⚡</span>
+          分割表示
+        </button>
+        <button
+          class="toolbar-button"
+          :class="{ active: viewMode === 'preview' }"
+          @click="$emit('change-view-mode', 'preview')"
+        >
+          <span class="icon">👁️</span>
+          プレビューのみ
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -103,5 +122,14 @@ defineEmits<{
 
 .toolbar-button.active:hover {
   background-color: #004578;
+}
+
+.view-mode-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.view-mode-buttons .toolbar-button {
+  min-width: 90px;
 }
 </style>

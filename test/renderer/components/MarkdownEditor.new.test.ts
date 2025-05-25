@@ -108,16 +108,11 @@ describe('MarkdownEditor.vue', () => {
         }
       });
 
-      // handleContentChangeメソッドを直接呼び出す
-      const mockEvent = {
-        target: { value: 'New content' }
-      } as unknown as Event;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (wrapper.vm as any).handleContentChange(mockEvent);
+      const textarea = wrapper.find('textarea');
+      await textarea.setValue('New content');
 
       expect(wrapper.emitted('update:fileContent')).toBeTruthy();
-      expect(wrapper.emitted('update:fileContent')![0]).toEqual(['New content']);
+      expect(wrapper.emitted('update:fileContent')?.[0]).toEqual(['New content']);
     });
 
     it('should update local content when prop changes', async () => {

@@ -2,16 +2,17 @@
 import { ref } from 'vue';
 import HeaderToolbar from './components/HeaderToolbar.vue';
 import MainLayout from './components/MainLayout.vue';
+import type { ViewMode } from './types/viewMode';
 
 // 状態管理
 const rootPath = ref<string>('');
 const isLoading = ref(false);
-const showPreview = ref<boolean>(true);
+const viewMode = ref<ViewMode>('split');
 const hasActiveFile = ref(false);
 
-// プレビューの表示/非表示を切り替える
-const togglePreview = (): void => {
-  showPreview.value = !showPreview.value;
+// 表示モードを変更する
+const changeViewMode = (mode: ViewMode): void => {
+  viewMode.value = mode;
 };
 
 // フォルダが変更された時の処理
@@ -36,16 +37,16 @@ const handleOpenFolder = (): void => {
     <!-- ヘッダーツールバー -->
     <HeaderToolbar
       :has-active-file="hasActiveFile"
-      :show-preview="showPreview"
+      :view-mode="viewMode"
       @open-folder="handleOpenFolder"
-      @toggle-preview="togglePreview"
+      @change-view-mode="changeViewMode"
     />
 
     <!-- メインレイアウト -->
     <MainLayout
       :root-path="rootPath"
       :is-loading="isLoading"
-      :show-preview="showPreview"
+      :view-mode="viewMode"
       @folder-changed="handleFolderChanged"
       @file-active-changed="handleFileActiveChanged"
     />

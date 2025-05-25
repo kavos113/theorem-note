@@ -3,11 +3,12 @@ import { ref, watch } from 'vue';
 import FileExplorer from './FileExplorer.vue';
 import MarkdownEditor from './MarkdownEditor.vue';
 import TabBar, { type OpenFile } from './TabBar.vue';
+import type { ViewMode } from '../types/viewMode';
 
 interface Props {
   rootPath: string;
   isLoading: boolean;
-  showPreview: boolean;
+  viewMode: ViewMode;
 }
 
 defineProps<Props>();
@@ -106,7 +107,7 @@ const handleFileSaved = (): void => {
         <MarkdownEditor
           :selected-file-path="currentFile.path"
           :file-content="currentFile.content"
-          :show-preview="showPreview"
+          :view-mode="viewMode"
           @update:file-content="handleContentUpdate"
           @file-saved="handleFileSaved"
         />

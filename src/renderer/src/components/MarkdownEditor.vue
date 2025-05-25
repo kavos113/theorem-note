@@ -2,13 +2,14 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { marked } from 'marked';
 import { initializeHighlightJS, createCodeRenderer } from '../utils/highlightUtils';
+import type { ViewMode } from '../types/viewMode';
 import '../assets/highlight.css';
 
 // Props
 interface Props {
   selectedFilePath?: string;
   fileContent: string;
-  showPreview: boolean;
+  viewMode: ViewMode;
 }
 
 const props = defineProps<Props>();
@@ -110,6 +111,19 @@ const startResize = (event: MouseEvent): void => {
   document.addEventListener('mouseup', handleMouseUp);
 };
 
+// 幅計算メソッド
+const getEditorWidth = (): string => {
+  if (props.viewMode === 'editor') return '100%';
+  if (props.viewMode === 'split') return `${editorWidth.value}%`;
+  return '0%';
+};
+
+const getPreviewWidth = (): string => {
+  if (props.viewMode === 'preview') return '100%';
+  if (props.viewMode === 'split') return `${100 - editorWidth.value}%`;
+  return '0%';
+};
+
 // コンポーネントのマウント時とアンマウント時の処理
 onMounted(() => {
   // highlight.jsを初期化
@@ -127,8 +141,8 @@ onUnmounted(() => {
     <div class="editor-header">
       {{ selectedFilePath }}
     </div>
-    <div class="editor-content-split" :class="{ 'preview-hidden': !showPreview }">
-      <div class="editor-pane" :style="{ width: showPreview ? `${editorWidth}%` : '100%' }">
+    <div class="editor-content-split" :class="`view-mode-${viewMode}`">
+      <div v-if="viewMode !== 'preview'" class="editor-pane" :style="{ width: getEditorWidth() }">
         <div class="pane-header">エディタ</div>
         <textarea
           v-model="localContent"
@@ -136,8 +150,8 @@ onUnmounted(() => {
           @input="handleContentChange"
         ></textarea>
       </div>
-      <div v-if="showPreview" class="resizer" @mousedown="startResize"></div>
-      <div v-if="showPreview" class="preview-pane" :style="{ width: `${100 - editorWidth}%` }">
+      <div v-if="viewMode === 'split'" class="resizer" @mousedown="startResize"></div>
+      <div v-if="viewMode !== 'editor'" class="preview-pane" :style="{ width: getPreviewWidth() }">
         <div class="pane-header">プレビュー</div>
         <!-- eslint-disable-next-line vue/no-v-html -->
         <div class="markdown-preview" v-html="htmlPreview"></div>
@@ -333,6 +347,14 @@ onUnmounted(() => {
 }
 
 .editor-content-split.preview-hidden .editor-pane {
+  width: 100% !important;
+}
+
+.view-mode-editor .editor-pane {
+  width: 100% !important;
+}
+
+.view-mode-preview .preview-pane {
   width: 100% !important;
 }
 </style>

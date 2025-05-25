@@ -73,7 +73,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-        
+
       - name: Build Electron app
         run: pnpm build:linux
         if: matrix.os == 'ubuntu-latest'
