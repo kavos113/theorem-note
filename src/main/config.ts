@@ -6,7 +6,7 @@ interface AppConfig {
   lastOpenedDirectory?: string;
 }
 
-class ConfigManager {
+export class ConfigManager {
   private configPath: string;
   private config: AppConfig = {};
 

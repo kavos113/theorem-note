@@ -12,15 +12,15 @@ vi.mock('electron', () => ({
 }));
 
 describe('ConfigManager', () => {
-  let configManager: typeof import('../../src/main/config').configManager;
+  let configManager: import('../../src/main/config').ConfigManager;
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'theorem-note-test-'));
 
     vi.clearAllMocks();
 
-    const configModule = await import('../../src/main/config');
-    configManager = configModule.configManager;
+    const { ConfigManager } = await import('../../src/main/config');
+    configManager = new ConfigManager();
   });
 
   afterEach(async () => {
