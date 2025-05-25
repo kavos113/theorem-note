@@ -5,11 +5,19 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    include: ['test/**/*.test.ts', 'test/**/*.spec.ts'],
-    exclude: ['node_modules', 'dist', 'out', 'src/renderer/**/*'],
+    include: ['test/main/**/*.test.ts', 'test/main/**/*.spec.ts'],
+    exclude: ['node_modules', 'dist', 'out', 'src/renderer/**/*', 'test/renderer/**/*'],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'dist/', 'out/', 'src/renderer/**/*', '**/*.test.*', '**/*.spec.*']
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'out/',
+        'src/renderer/**/*',
+        'test/renderer/**/*',
+        '**/*.test.*',
+        '**/*.spec.*'
+      ]
     },
     testTimeout: 10000,
     hookTimeout: 10000

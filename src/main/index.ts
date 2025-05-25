@@ -1,7 +1,7 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import icon from '../../resources/icon.png?asset';
+import icon from '../../resources/icon.png?asset&asarUnpack';
 import { onGetFileTree, onGetNewDirectoryFileTree, onReadFile, onWriteFile } from './file';
 import { configManager } from './config';
 
