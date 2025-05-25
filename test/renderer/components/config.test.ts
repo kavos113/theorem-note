@@ -12,14 +12,14 @@ vi.mock('electron', () => ({
 }));
 
 describe('ConfigManager', () => {
-  let configManager: import('../../src/main/config').ConfigManager;
+  let configManager: import('../../../src/main/config').ConfigManager;
 
   beforeEach(async () => {
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'theorem-note-test-'));
 
     vi.clearAllMocks();
 
-    const { ConfigManager } = await import('../../src/main/config');
+    const { ConfigManager } = await import('../../../src/main/config');
     configManager = new ConfigManager();
   });
 
