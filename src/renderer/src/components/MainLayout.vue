@@ -1,47 +1,3 @@
-<template>
-  <div class="main-area">
-    <!-- サイドバー（ファイルエクスプローラー） -->
-    <div class="sidebar">
-      <FileExplorer
-        :root-path="rootPath"
-        :selected-file="selectedFilePath"
-        @select-file="handleFileSelect"
-        @folder-changed="$emit('folder-changed', $event)"
-      />
-    </div>
-
-    <!-- メインコンテンツ領域 -->
-    <div class="main-content">
-      <!-- タブバー -->
-      <TabBar
-        ref="tabBarRef"
-        :is-loading="isLoading"
-        @file-opened="handleFileOpened"
-        @file-closed="handleFileClosed"
-        @file-switched="handleFileSwitched"
-        @content-updated="handleContentUpdated"
-      />
-
-      <div v-if="isLoading" class="loading">読み込み中...</div>
-      <div v-else-if="!currentFile" class="welcome-screen">
-        <h1>Theorem Note</h1>
-        <p>
-          左側のエクスプローラーからファイルを選択するか、「フォルダを開く」ボタンを押してプロジェクトフォルダを選択してください。
-        </p>
-      </div>
-      <div v-else class="editor-container">
-        <MarkdownEditor
-          :selected-file-path="currentFile.path"
-          :file-content="currentFile.content"
-          :show-preview="showPreview"
-          @update:file-content="handleContentUpdate"
-          @file-saved="handleFileSaved"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import FileExplorer from './FileExplorer.vue';
@@ -114,6 +70,50 @@ const handleFileSaved = (): void => {
   }
 };
 </script>
+
+<template>
+  <div class="main-area">
+    <!-- サイドバー（ファイルエクスプローラー） -->
+    <div class="sidebar">
+      <FileExplorer
+        :root-path="rootPath"
+        :selected-file="selectedFilePath"
+        @select-file="handleFileSelect"
+        @folder-changed="$emit('folder-changed', $event)"
+      />
+    </div>
+
+    <!-- メインコンテンツ領域 -->
+    <div class="main-content">
+      <!-- タブバー -->
+      <TabBar
+        ref="tabBarRef"
+        :is-loading="isLoading"
+        @file-opened="handleFileOpened"
+        @file-closed="handleFileClosed"
+        @file-switched="handleFileSwitched"
+        @content-updated="handleContentUpdated"
+      />
+
+      <div v-if="isLoading" class="loading">読み込み中...</div>
+      <div v-else-if="!currentFile" class="welcome-screen">
+        <h1>Theorem Note</h1>
+        <p>
+          左側のエクスプローラーからファイルを選択するか、「フォルダを開く」ボタンを押してプロジェクトフォルダを選択してください。
+        </p>
+      </div>
+      <div v-else class="editor-container">
+        <MarkdownEditor
+          :selected-file-path="currentFile.path"
+          :file-content="currentFile.content"
+          :show-preview="showPreview"
+          @update:file-content="handleContentUpdate"
+          @file-saved="handleFileSaved"
+        />
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 /* メインエリア */

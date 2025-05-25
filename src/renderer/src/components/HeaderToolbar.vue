@@ -1,3 +1,17 @@
+<script setup lang="ts">
+interface Props {
+  hasActiveFile: boolean;
+  showPreview: boolean;
+}
+
+defineProps<Props>();
+
+defineEmits<{
+  'open-folder': [];
+  'toggle-preview': [];
+}>();
+</script>
+
 <template>
   <div class="header-toolbar">
     <div class="toolbar-left">
@@ -22,20 +36,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-interface Props {
-  hasActiveFile: boolean;
-  showPreview: boolean;
-}
-
-defineProps<Props>();
-
-defineEmits<{
-  'open-folder': [];
-  'toggle-preview': [];
-}>();
-</script>
 
 <style scoped>
 /* ヘッダーツールバー */

@@ -1,3 +1,37 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue';
+
+interface FileItem {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+  children?: FileItem[];
+}
+
+const props = defineProps<{
+  item: FileItem;
+  selectedFile?: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'select-file', path: string): void;
+}>();
+
+const isExpanded = ref(false);
+
+const isSelected = computed(() => {
+  return props.selectedFile === props.item.path;
+});
+
+const handleClick = (): void => {
+  if (props.item.isDirectory) {
+    isExpanded.value = !isExpanded.value;
+  } else {
+    emit('select-file', props.item.path);
+  }
+};
+</script>
+
 <template>
   <li class="file-tree-item">
     <div
@@ -27,40 +61,6 @@
     </ul>
   </li>
 </template>
-
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-
-interface FileItem {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  children?: FileItem[];
-}
-
-const props = defineProps<{
-  item: FileItem;
-  selectedFile?: string;
-}>();
-
-const emit = defineEmits<{
-  (e: 'select-file', path: string): void;
-}>();
-
-const isExpanded = ref(false);
-
-const isSelected = computed(() => {
-  return props.selectedFile === props.item.path;
-});
-
-const handleClick = () => {
-  if (props.item.isDirectory) {
-    isExpanded.value = !isExpanded.value;
-  } else {
-    emit('select-file', props.item.path);
-  }
-};
-</script>
 
 <style scoped>
 .file-tree-item {

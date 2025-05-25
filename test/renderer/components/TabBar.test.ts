@@ -107,7 +107,7 @@ describe('TabBar.vue', () => {
 
     it('should close a tab', async () => {
       wrapper = mount(TabBar);
-      const componentInstance = wrapper.vm as any;
+      const componentInstance = wrapper.vm;
 
       const testFile = {
         path: '/test/file1.md',
@@ -131,7 +131,7 @@ describe('TabBar.vue', () => {
 
     it('should show modified indicator when file is modified', async () => {
       wrapper = mount(TabBar);
-      const componentInstance = wrapper.vm as any;
+      const componentInstance = wrapper.vm;
 
       const testFile = {
         path: '/test/modified.md',
@@ -156,7 +156,7 @@ describe('TabBar.vue', () => {
 
     it('should not show modified indicator when file is not modified', async () => {
       wrapper = mount(TabBar);
-      const componentInstance = wrapper.vm as any;
+      const componentInstance = wrapper.vm;
 
       const testFile = {
         path: '/test/unmodified.md',
@@ -178,7 +178,7 @@ describe('TabBar.vue', () => {
   describe('アクティブタブ', () => {
     it('should mark the active tab with active class', async () => {
       wrapper = mount(TabBar);
-      const componentInstance = wrapper.vm as any;
+      const componentInstance = wrapper.vm;
 
       const file1 = {
         path: '/test/file1.md',
@@ -211,7 +211,7 @@ describe('TabBar.vue', () => {
 
     it('should return current active file', async () => {
       wrapper = mount(TabBar);
-      const componentInstance = wrapper.vm as any;
+      const componentInstance = wrapper.vm;
 
       const testFile = {
         path: '/test/active.md',

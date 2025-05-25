@@ -1,19 +1,3 @@
-<template>
-  <div v-if="openFiles.length > 0" class="tab-bar">
-    <div
-      v-for="(file, index) in openFiles"
-      :key="file.path"
-      class="tab"
-      :class="{ active: index === activeTabIndex }"
-      @click="switchToTab(index)"
-    >
-      <span class="tab-name">{{ file.displayName }}</span>
-      <span v-if="file.isModified" class="modified-indicator">●</span>
-      <button class="tab-close" @click.stop="closeTab(index)">×</button>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
@@ -155,6 +139,22 @@ defineExpose({
   activeTabIndex
 });
 </script>
+
+<template>
+  <div v-if="openFiles.length > 0" class="tab-bar">
+    <div
+      v-for="(file, index) in openFiles"
+      :key="file.path"
+      class="tab"
+      :class="{ active: index === activeTabIndex }"
+      @click="switchToTab(index)"
+    >
+      <span class="tab-name">{{ file.displayName }}</span>
+      <span v-if="file.isModified" class="modified-indicator">●</span>
+      <button class="tab-close" @click.stop="closeTab(index)">×</button>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 /* タブバー */

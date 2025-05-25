@@ -1,31 +1,3 @@
-<template>
-  <div class="file-explorer">
-    <div class="explorer-header">
-      <h3>エクスプローラー</h3>
-      <button class="folder-button" title="フォルダを開く" @click="openFolder">📁</button>
-    </div>
-    <div class="file-tree">
-      <div v-if="loading" class="loading">読み込み中...</div>
-      <div v-else-if="error" class="error">{{ error }}</div>
-      <div v-else-if="!rootPath" class="no-folder">
-        <p>フォルダが選択されていません</p>
-        <button class="open-folder-btn" @click="openFolder">フォルダを開く</button>
-      </div>
-      <div v-else class="tree-container">
-        <ul class="tree-root">
-          <file-tree-item
-            v-for="item in fileTree"
-            :key="item.path"
-            :item="item"
-            :selected-file="selectedFile"
-            @select-file="$emit('select-file', $event)"
-          />
-        </ul>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import FileTreeItem from './FileTreeItem.vue';
@@ -131,6 +103,34 @@ watch(
   }
 );
 </script>
+
+<template>
+  <div class="file-explorer">
+    <div class="explorer-header">
+      <h3>エクスプローラー</h3>
+      <button class="folder-button" title="フォルダを開く" @click="openFolder">📁</button>
+    </div>
+    <div class="file-tree">
+      <div v-if="loading" class="loading">読み込み中...</div>
+      <div v-else-if="error" class="error">{{ error }}</div>
+      <div v-else-if="!rootPath" class="no-folder">
+        <p>フォルダが選択されていません</p>
+        <button class="open-folder-btn" @click="openFolder">フォルダを開く</button>
+      </div>
+      <div v-else class="tree-container">
+        <ul class="tree-root">
+          <file-tree-item
+            v-for="item in fileTree"
+            :key="item.path"
+            :item="item"
+            :selected-file="selectedFile"
+            @select-file="$emit('select-file', $event)"
+          />
+        </ul>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .file-explorer {
