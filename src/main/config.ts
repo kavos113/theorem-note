@@ -21,7 +21,7 @@ class ConfigManager {
       const configData = await fs.readFile(this.configPath, 'utf-8');
       this.config = JSON.parse(configData);
       return this.config;
-    } catch (err) {
+    } catch {
       // ファイルが存在しない場合は空の設定を返す
       console.log('Config file not found, using default config');
       this.config = {};
