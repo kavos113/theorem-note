@@ -263,6 +263,18 @@ onUnmounted(() => {
   color: var(--text-color);
 }
 
+.editor-content-split.preview-hidden .editor-pane {
+  width: 100% !important;
+}
+
+.view-mode-editor .editor-pane {
+  width: 100% !important;
+}
+
+.view-mode-preview .preview-pane {
+  width: 100% !important;
+}
+
 /* マークダウンプレビューのスタイリング */
 .markdown-preview :deep(h1) {
   font-size: 2em;
@@ -369,15 +381,7 @@ onUnmounted(() => {
   font-weight: bold;
 }
 
-.editor-content-split.preview-hidden .editor-pane {
-  width: 100% !important;
-}
-
-.view-mode-editor .editor-pane {
-  width: 100% !important;
-}
-
-.view-mode-preview .preview-pane {
-  width: 100% !important;
+.markdown-preview :deep(strong) {
+  font-weight: bold;
 }
 </style>
