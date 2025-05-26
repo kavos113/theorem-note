@@ -288,10 +288,10 @@ describe('MarkdownEditor.vue', () => {
       // CodeMirrorコンテナが存在することを確認
       const editorContainer = wrapper.find('.codemirror-container');
       expect(editorContainer.exists()).toBe(true);
-      
+
       // コンポーネントがマウントされた後のNextTickを待つ
       await wrapper.vm.$nextTick();
-      
+
       // CodeMirrorが正しく初期化されたことを確認
       expect(wrapper.vm.codeMirrorInstance).toBeDefined();
     });
@@ -306,7 +306,7 @@ describe('MarkdownEditor.vue', () => {
 
       // プロパティ変更時にCodeMirrorの内容も更新されることを確認
       await wrapper.setProps({ fileContent: 'Updated content' });
-      
+
       // CodeMirrorエディタのコンテンツが更新されていることを確認
       expect(wrapper.vm.localContent).toBe('Updated content');
     });
@@ -321,7 +321,7 @@ describe('MarkdownEditor.vue', () => {
 
       // CodeMirrorからの変更イベントをシミュレート
       const newContent = 'New content from CodeMirror';
-      
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (wrapper.vm as any).handleCodeMirrorChange(newContent);
 

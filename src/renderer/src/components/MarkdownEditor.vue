@@ -142,7 +142,7 @@ onMounted(async () => {
   // highlight.jsを初期化
   initializeHighlightJS();
   document.addEventListener('keydown', handleKeyDown);
-  
+
   // CodeMirrorエディタを初期化
   await nextTick();
   if (editorContainer.value) {
@@ -156,7 +156,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
-  
+
   // CodeMirrorインスタンスを破棄
   if (codeMirrorInstance.value) {
     codeMirrorInstance.value.destroy();
