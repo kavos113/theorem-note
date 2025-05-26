@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import { marked } from 'marked';
-import { initializeHighlightJS, createCodeRenderer } from '../utils/highlightUtils';
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { createCodeMirrorEditor, type CodeMirrorInstance } from '../utils/codeMirrorUtils';
 import type { ViewMode } from '../types/viewMode';
 import '../assets/highlight.css';
+import { markdownToHtml } from '@renderer/utils/markdownUtils';
+import 'highlight.js/styles/github.css';
 
-// Props
 interface Props {
   selectedFilePath?: string;
   fileContent: string;
@@ -15,7 +14,6 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// Emits
 interface Emits {
   (e: 'update:fileContent', value: string): void;
   (e: 'file-saved'): void;
@@ -23,21 +21,15 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
-// ローカルコンテンツの管理
 const localContent = ref(props.fileContent);
 const isSaving = ref(false);
-const editorWidth = ref(50); // エディタの幅（パーセンテージ）
+const editorWidth = ref(50); // エディタの幅(%)
 const isResizing = ref(false);
 const editorContainer = ref<HTMLElement>();
 const codeMirrorInstance = ref<CodeMirrorInstance>();
 
-// markedのレンダラーを設定
-const renderer = new marked.Renderer();
-renderer.code = createCodeRenderer();
+const htmlPreview = ref<string>('');
 
-marked.use({ renderer });
-
-// ファイルを保存する
 const saveFile = async (): Promise<void> => {
   if (!props.selectedFilePath || isSaving.value) return;
 
@@ -53,7 +45,6 @@ const saveFile = async (): Promise<void> => {
   }
 };
 
-// プロパティの変更を監視
 watch(
   () => props.fileContent,
   (newContent) => {
@@ -66,31 +57,31 @@ watch(
   { immediate: true }
 );
 
-// コンテンツ変更時のハンドラー
 const handleContentChange = (event: Event): void => {
   const target = event.target as HTMLTextAreaElement;
   localContent.value = target.value;
   emit('update:fileContent', target.value);
 };
 
-// CodeMirrorからの変更ハンドラー
 const handleCodeMirrorChange = (content: string): void => {
   localContent.value = content;
   emit('update:fileContent', content);
 };
 
-// マークダウンプレビューの計算プロパティ
-const htmlPreview = computed(() => {
-  if (!localContent.value) return '';
-  try {
-    return marked(localContent.value);
-  } catch (err) {
-    console.error('マークダウン変換エラー:', err);
-    return '<p>プレビューの生成中にエラーが発生しました</p>';
-  }
-});
+watch(
+  localContent,
+  async (newContent) => {
+    if (!newContent) return;
+    try {
+      htmlPreview.value = await markdownToHtml(newContent);
+    } catch (err) {
+      console.error('マークダウン変換エラー:', err);
+      htmlPreview.value = '<p>プレビューの生成中にエラーが発生しました</p>';
+    }
+  },
+  { immediate: true }
+);
 
-// キーボードショートカットの処理
 const handleKeyDown = (event: KeyboardEvent): void => {
   if (event.ctrlKey && event.key === 's') {
     event.preventDefault();
@@ -98,7 +89,6 @@ const handleKeyDown = (event: KeyboardEvent): void => {
   }
 };
 
-// リサイズ機能
 const startResize = (event: MouseEvent): void => {
   event.preventDefault();
   isResizing.value = true;
@@ -124,7 +114,6 @@ const startResize = (event: MouseEvent): void => {
   document.addEventListener('mouseup', handleMouseUp);
 };
 
-// 幅計算メソッド
 const getEditorWidth = (): string => {
   if (props.viewMode === 'editor') return '100%';
   if (props.viewMode === 'split') return `${editorWidth.value}%`;
@@ -137,13 +126,9 @@ const getPreviewWidth = (): string => {
   return '0%';
 };
 
-// コンポーネントのマウント時とアンマウント時の処理
 onMounted(async () => {
-  // highlight.jsを初期化
-  initializeHighlightJS();
   document.addEventListener('keydown', handleKeyDown);
 
-  // CodeMirrorエディタを初期化
   await nextTick();
   if (editorContainer.value) {
     codeMirrorInstance.value = createCodeMirrorEditor(
@@ -157,7 +142,6 @@ onMounted(async () => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
 
-  // CodeMirrorインスタンスを破棄
   if (codeMirrorInstance.value) {
     codeMirrorInstance.value.destroy();
   }
