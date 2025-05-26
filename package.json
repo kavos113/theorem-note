@@ -28,8 +28,14 @@
     "build:linux": "pnpm build && electron-builder --linux"
   },
   "dependencies": {
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-markdown": "^6.3.2",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/theme-one-dark": "^6.1.2",
+    "@codemirror/view": "^6.36.8",
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
+    "codemirror": "^6.0.1",
     "electron-store": "^10.0.1",
     "electron-updater": "^6.3.9",
     "highlight.js": "^11.11.1",

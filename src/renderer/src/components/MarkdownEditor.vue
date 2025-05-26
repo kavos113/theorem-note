@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { marked } from 'marked';
 import { initializeHighlightJS, createCodeRenderer } from '../utils/highlightUtils';
+import { createCodeMirrorEditor, type CodeMirrorInstance } from '../utils/codeMirrorUtils';
 import type { ViewMode } from '../types/viewMode';
 import '../assets/highlight.css';
 
@@ -27,6 +28,8 @@ const localContent = ref(props.fileContent);
 const isSaving = ref(false);
 const editorWidth = ref(50); // エディタの幅（パーセンテージ）
 const isResizing = ref(false);
+const editorContainer = ref<HTMLElement>();
+const codeMirrorInstance = ref<CodeMirrorInstance>();
 
 // markedのレンダラーを設定
 const renderer = new marked.Renderer();
@@ -55,6 +58,10 @@ watch(
   () => props.fileContent,
   (newContent) => {
     localContent.value = newContent;
+    // CodeMirrorの内容も更新
+    if (codeMirrorInstance.value) {
+      codeMirrorInstance.value.updateContent(newContent);
+    }
   },
   { immediate: true }
 );
@@ -64,6 +71,12 @@ const handleContentChange = (event: Event): void => {
   const target = event.target as HTMLTextAreaElement;
   localContent.value = target.value;
   emit('update:fileContent', target.value);
+};
+
+// CodeMirrorからの変更ハンドラー
+const handleCodeMirrorChange = (content: string): void => {
+  localContent.value = content;
+  emit('update:fileContent', content);
 };
 
 // マークダウンプレビューの計算プロパティ
@@ -125,14 +138,29 @@ const getPreviewWidth = (): string => {
 };
 
 // コンポーネントのマウント時とアンマウント時の処理
-onMounted(() => {
+onMounted(async () => {
   // highlight.jsを初期化
   initializeHighlightJS();
   document.addEventListener('keydown', handleKeyDown);
+  
+  // CodeMirrorエディタを初期化
+  await nextTick();
+  if (editorContainer.value) {
+    codeMirrorInstance.value = createCodeMirrorEditor(
+      editorContainer.value,
+      localContent.value,
+      handleCodeMirrorChange
+    );
+  }
 });
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeyDown);
+  
+  // CodeMirrorインスタンスを破棄
+  if (codeMirrorInstance.value) {
+    codeMirrorInstance.value.destroy();
+  }
 });
 </script>
 
@@ -144,9 +172,10 @@ onUnmounted(() => {
     <div class="editor-content-split" :class="`view-mode-${viewMode}`">
       <div v-if="viewMode !== 'preview'" class="editor-pane" :style="{ width: getEditorWidth() }">
         <div class="pane-header">エディタ</div>
+        <div ref="editorContainer" class="codemirror-container"></div>
         <textarea
           v-model="localContent"
-          class="markdown-editor"
+          class="markdown-editor hidden"
           @input="handleContentChange"
         ></textarea>
       </div>
@@ -227,6 +256,16 @@ onUnmounted(() => {
   resize: none;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.codemirror-container {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.hidden {
+  display: none;
 }
 
 .markdown-preview {

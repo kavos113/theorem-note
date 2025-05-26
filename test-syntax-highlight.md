@@ -150,7 +150,7 @@ print(person.greet())
 {
   "name": "theorem-note",
   "version": "1.0.0",
-  "description": "リンク機能を重視したマークダウンエディタ",
+  "description": "マークダウンエディタ",
   "main": "out/main/index.js",
   "scripts": {
     "build": "electron-vite build",

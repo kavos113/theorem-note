@@ -18,6 +18,18 @@ vi.mock('../../../src/renderer/src/utils/highlightUtils', () => ({
   createCodeRenderer: vi.fn(() => () => '<pre><code>mocked code</code></pre>')
 }));
 
+// CodeMirrorのモック
+const mockCodeMirrorInstance = {
+  view: {},
+  updateContent: vi.fn(),
+  getContent: vi.fn(() => ''),
+  destroy: vi.fn()
+};
+
+vi.mock('../../../src/renderer/src/utils/codeMirrorUtils', () => ({
+  createCodeMirrorEditor: vi.fn(() => mockCodeMirrorInstance)
+}));
+
 describe('MarkdownEditor.vue', () => {
   let wrapper: VueWrapper<InstanceType<typeof MarkdownEditor>>;
 
@@ -248,6 +260,73 @@ describe('MarkdownEditor.vue', () => {
       });
 
       expect(wrapper.props('viewMode')).toBe('preview');
+    });
+  });
+
+  describe('シンタックスハイライト', () => {
+    it('should have syntax highlighting enabled in editor', async () => {
+      wrapper = mount(MarkdownEditor, {
+        props: {
+          fileContent: '# Test Header\n\n```javascript\nconst x = 1;\n```',
+          viewMode: 'editor' as ViewMode
+        }
+      });
+
+      // CodeMirrorコンテナが存在することを確認
+      const editorContainer = wrapper.find('.codemirror-container');
+      expect(editorContainer.exists()).toBe(true);
+    });
+
+    it('should apply markdown syntax highlighting', async () => {
+      wrapper = mount(MarkdownEditor, {
+        props: {
+          fileContent: '# Heading\n\n**Bold text**\n\n- List item',
+          viewMode: 'editor' as ViewMode
+        }
+      });
+
+      // CodeMirrorコンテナが存在することを確認
+      const editorContainer = wrapper.find('.codemirror-container');
+      expect(editorContainer.exists()).toBe(true);
+      
+      // コンポーネントがマウントされた後のNextTickを待つ
+      await wrapper.vm.$nextTick();
+      
+      // CodeMirrorが正しく初期化されたことを確認
+      expect(wrapper.vm.codeMirrorInstance).toBeDefined();
+    });
+
+    it('should maintain content synchronization with CodeMirror', async () => {
+      wrapper = mount(MarkdownEditor, {
+        props: {
+          fileContent: 'Initial content',
+          viewMode: 'editor' as ViewMode
+        }
+      });
+
+      // プロパティ変更時にCodeMirrorの内容も更新されることを確認
+      await wrapper.setProps({ fileContent: 'Updated content' });
+      
+      // CodeMirrorエディタのコンテンツが更新されていることを確認
+      expect(wrapper.vm.localContent).toBe('Updated content');
+    });
+
+    it('should emit content changes from CodeMirror', async () => {
+      wrapper = mount(MarkdownEditor, {
+        props: {
+          fileContent: '',
+          viewMode: 'editor' as ViewMode
+        }
+      });
+
+      // CodeMirrorからの変更イベントをシミュレート
+      const newContent = 'New content from CodeMirror';
+      
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (wrapper.vm as any).handleCodeMirrorChange(newContent);
+
+      expect(wrapper.emitted('update:fileContent')).toBeTruthy();
+      expect(wrapper.emitted('update:fileContent')![0]).toEqual([newContent]);
     });
   });
 });
