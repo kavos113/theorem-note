@@ -5,6 +5,8 @@ import rehypeStringify from 'rehype-stringify';
 import rehypeHighlight from 'rehype-highlight';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 let projectRoot = '';
 
@@ -21,15 +23,11 @@ export const setProjectRoot = (root: string): void => {
 export const markdownToHtml = async (markdown: string): Promise<string> => {
   const parsed = await unified()
     .use(remarkParse)
-    .use(() => {
-      return (tree: any) => {
-        // Convert Obsidian-style image links to standard Markdown image syntax
-        console.dir(tree, { depth: null });
-      };
-    })
     .use(remarkBreaks)
     .use(remarkGfm)
+    .use(remarkMath)
     .use(remarkRehype)
+    .use(rehypeKatex)
     .use(rehypeHighlight)
     .use(rehypeStringify)
     .process(convertObsidianLinks(markdown));

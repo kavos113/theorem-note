@@ -195,13 +195,17 @@ describe('MarkdownEditor.vue', () => {
   });
 
   describe('マークダウンプレビュー', () => {
-    it('should render markdown content as HTML', () => {
+    it('should render markdown content as HTML', async () => {
       wrapper = mount(MarkdownEditor, {
         props: {
           fileContent: '# Test Header\n\nSome content',
           viewMode: 'preview' as ViewMode
         }
       });
+
+      // プレビューの非同期レンダリングを待つ
+      await wrapper.vm.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 50)); // 非同期処理完了を待つ
 
       const preview = wrapper.find('.markdown-preview');
       expect(preview.exists()).toBe(true);
@@ -219,7 +223,15 @@ describe('MarkdownEditor.vue', () => {
         }
       });
 
+      // 初期レンダリングを待つ
+      await wrapper.vm.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
       await wrapper.setProps({ fileContent: '# Updated' });
+
+      // プロパティ変更後のレンダリングを待つ
+      await wrapper.vm.$nextTick();
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const preview = wrapper.find('.markdown-preview');
       const htmlContent = preview.html();

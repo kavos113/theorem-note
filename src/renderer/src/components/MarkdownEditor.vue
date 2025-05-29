@@ -3,6 +3,7 @@ import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { createCodeMirrorEditor, type CodeMirrorInstance } from '../utils/codeMirrorUtils';
 import type { ViewMode } from '../types/viewMode';
 import '../assets/highlight.css';
+import '../assets/katex.css';
 import { markdownToHtml } from '@renderer/utils/markdownUtils';
 import 'highlight.js/styles/github.css';
 
