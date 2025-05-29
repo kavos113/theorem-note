@@ -19,3 +19,30 @@ describe('markdownToHtml', () => {
     expect(html).toContain('</code></pre>');
   });
 });
+
+describe('markdownToHtml obsidian image links', () => {
+  it('should convert obsidian image link', async () => {
+    const input = '![[image.png]]';
+    const output = await markdownToHtml(input);
+    expect(output).toContain('<img src="image.png" alt="image.png">');
+  });
+
+  it('should convert multiple image links', async () => {
+    const input = '![[image1.png]] and ![[image2.jpg]]';
+    const output = await markdownToHtml(input);
+    expect(output).toContain('<img src="image1.png" alt="image1.png">');
+    expect(output).toContain('<img src="image2.jpg" alt="image2.jpg">');
+  });
+
+  it('should convert link with text', async () => {
+    const input = 'これは画像です: ![[photo.png]]';
+    const output = await markdownToHtml(input);
+    expect(output).toContain('これは画像です: <img src="photo.png" alt="photo.png">');
+  });
+
+  it('should convert normal image link', async () => {
+    const input = '![alt text](image.png)';
+    const output = await markdownToHtml(input);
+    expect(output).toContain('<img src="image.png" alt="alt text">');
+  });
+});
