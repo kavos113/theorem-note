@@ -45,4 +45,10 @@ describe('markdownToHtml obsidian image links', () => {
     const output = await markdownToHtml(input);
     expect(output).toContain('<img src="image.png" alt="alt text">');
   });
+
+  it('should process image with spaces in filename', async () => {
+    const input = '![[image with spaces.png]]';
+    const output = await markdownToHtml(input);
+    expect(output).toContain('<img src="image%20with%20spaces.png" alt="image with spaces.png">');
+  });
 });

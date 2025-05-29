@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import HeaderToolbar from './components/HeaderToolbar.vue';
 import MainLayout from './components/MainLayout.vue';
 import type { ViewMode } from './types/viewMode';
+import { setProjectRoot } from '@renderer/utils/markdownUtils';
 
 // 状態管理
 const rootPath = ref<string>('');
@@ -18,6 +19,7 @@ const changeViewMode = (mode: ViewMode): void => {
 // フォルダが変更された時の処理
 const handleFolderChanged = (path: string): void => {
   rootPath.value = path;
+  setProjectRoot(rootPath.value);
 };
 
 // ファイルがアクティブになった時の処理
