@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import icon from '../../resources/icon.png?asset&asarUnpack';
 import { onGetFileTree, onGetNewDirectoryFileTree, onReadFile, onWriteFile } from './file';
 import { configManager } from './config';
+import { saveWorkspaceInfo, loadWorkspaceInfo, hasWorkspaceInfo } from './workspace';
 
 function createWindow(): void {
   // Create the browser window.
@@ -63,6 +64,26 @@ app.whenReady().then(() => {
   // 設定関連のIPC
   ipcMain.handle('getLastOpenedDirectory', async () => {
     return await configManager.getLastOpenedDirectory();
+  });
+
+  // ワークスペース関連のIPC
+  ipcMain.handle(
+    'saveWorkspaceInfo',
+    async (
+      _event,
+      rootPath: string,
+      workspaceInfo: { openTabs: string[]; activeTab: string | null }
+    ) => {
+      return await saveWorkspaceInfo(rootPath, workspaceInfo);
+    }
+  );
+
+  ipcMain.handle('loadWorkspaceInfo', async (_event, rootPath: string) => {
+    return await loadWorkspaceInfo(rootPath);
+  });
+
+  ipcMain.handle('hasWorkspaceInfo', async (_event, rootPath: string) => {
+    return await hasWorkspaceInfo(rootPath);
   });
 
   createWindow();
